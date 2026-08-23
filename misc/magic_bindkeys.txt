@@ -1,0 +1,31 @@
+#--------------------------------------------------------------------------
+#                       Personal Shortcuts Added
+#--------------------------------------------------------------------------
+
+# General
+macro XK_k "meas"
+macro ^k "unmeas"
+macro q "magic::gencell {} ; raise .params"
+macro <del> "delete"
+macro e "sideways"
+macro ^e "upsidedown"
+
+# Number Row Shortcuts ----------------------------------------------
+# Numpad (See only specified Layer)
+macro XK_1 "see no *; see m1; see rmetal1; see via1"
+macro XK_2 "see no *; see m2; see rmetal2; see via1; see via2"
+macro XK_3 "see no *; see m3; see rmetal3; see via2; see via3"
+macro XK_4 "see no *; see m4; see rmetal4; see via3; see via4"
+macro XK_5 "see no *; see m5; see rmetal5; see via4"
+macro XK_8 "see no *; see nwell; see pwell; see mcon; see li; see viali; see locali; see ndcontact; see pdcontact; see nfetlvt; see pfetlvt; see psubstratepdiff; see nsubstratendiff; see psubstratepcontact; see nsubstratencontact; see polysilicon; see pcontact; see xpolycontact; see xpolyres; see mimcap; see ntransistor; see ptransistor; see pdiffusion; see ndiffusion"
+macro XK_9 "see *"
+
+# Alt-Numpad (Append layer)
+macro Meta_XK_1 "see m1; see rmetal1; see via1"
+macro Meta_XK_2 "see m2; see rmetal2; see via2"
+macro Meta_XK_3 "see m3; see rmetal3; see via3"
+macro Meta_XK_4 "see m4; see rmetal4; see via4"
+macro Meta_XK_5 "see m5; see rmetal5"
+macro Meta_XK_8 "see nwell; see pwell; see mcon; see li; see viali; see locali; see ndcontact; see pdcontact; see nfetlvt; see pfetlvt; see psubstratepdiff; see nsubstratendiff; see psubstratepcontact; see nsubstratencontact; see polysilicon; see pcontact; see xpolycontact; see xpolyres; see mimcap; see ntransistor; see ptransistor; see pdiffusion; see ndiffusion"
+macro Meta_XK_9 "see *"
+macro Meta_XK_0 "cif see VIA1; cif see VIA2; cif see VIA3; cif see VIA4"

@@ -1,0 +1,3 @@
+export PDK_ROOT=$HOME/eda/pdk
+export PDK=sky130A            # switch to ihp-sg13g2 for IHP projects
+export PDKPATH=$PDK_ROOT/$PDK
