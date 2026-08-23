@@ -8,6 +8,7 @@ This covers installing **xschem**, **ngspice**, **magic**, and **netgen** native
 
 ```bash
 sudo apt update
+sudo apt upgrade
 sudo apt install -y build-essential git m4 tcsh csh autoconf automake libtool \
   tcl-dev tk-dev libx11-dev libcairo2-dev libxpm-dev libgtk-3-dev \
   mesa-common-dev libglu1-mesa-dev libncurses-dev libreadline-dev \
@@ -55,15 +56,6 @@ sudo make install
 cd ../..
 ```
 
-Create a `.spiceinit` file (used by ngspice on every run) in your home directory:
-
-```bash
-cat > ~/.spiceinit << 'EOF'
-set ngbehavior=hsa
-set ng_nomodcheck
-EOF
-```
-
 ### Build and install magic
 
 ```bash
@@ -94,14 +86,15 @@ Both **sky130** and **IHP SG13G2** are distributed as prebuilt, version-pinned p
 
 ```bash
 python3 -m pip install --user --upgrade --no-cache-dir ciel
-ciel --version
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-> **Note** `pip install --user` puts the `ciel` executable (and anything else installed this way: `pcpp`, `pygments`, etc.) in `~/.local/bin`, which usually isn't on your `PATH` by default on a fresh system. If `ciel --version` says "command not found," add this to `~/.bashrc` and reload your shell:
-> ```bash
-> echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-> source ~/.bashrc
-> ```
+Then check it was installed correctly by checking the version
+
+```bash
+ciel --version
+```
 
 By default `ciel` installs into `~/.ciel`. It's common to instead set a `PDK_ROOT` explicitly and put it in your shell profile (`~/.bashrc`):
 
@@ -136,62 +129,127 @@ ciel enable --pdk-family ihp-sg13g2 <commit_hash>
 
 This installs to `$PDK_ROOT/ihp-sg13g2`. The same full-hash rules above apply.
 
-### IHP-specific extra step: build the PSP103 OSDI model
-
-The IHP SG13G2 MOSFET model (PSP103) needs to be compiled with `openvaf` into an `.osdi` binary that ngspice loads at runtime. The actual script (confirmed by directory listing) is `install.py`, not a shell script:
-
-```bash
-cd $PDK_ROOT/ihp-sg13g2/libs.tech/xschem
-ls   # confirms install.py is present alongside xschemrc, sg13g2_pr, etc.
-python3 install.py
-```
-
-This compiles `psp103_nqs.osdi` into the PDK's `ngspice/osdi/` directory and symlinks a PDK-specific `.spiceinit` into your home directory so IHP simulations work from any folder.
-
-**This script requires the `openvaf` Verilog-A compiler to already be on your `PATH`.** If you see:
-
-```
-VerilogA compiler not found - install 'openvaf-r' or 'openvaf' to generate the necessary models
-```
-
-you need to install it manually first, see the next section, **Installing openvaf**, before re-running `install.py`.
-
 ---
 
-## Installing `openvaf` (required for IHP SG13G2 only)
+### Installing `openvaf` from source (ONLY required for IHP SG13G2)
 
-`openvaf` is **not** on GitHub Releases, despite the project living on GitHub the maintained fork is [OpenVAF/OpenVAF-Reloaded](https://github.com/OpenVAF/OpenVAF-Reloaded), but its precompiled binaries are hosted separately at:
+The IHP SG13G2 PDK uses Verilog-A compact models, including the PSP103 MOSFET model, which must be compiled into OSDI libraries for use with ngspice. The IHP PDK's `install.py` script invokes `openvaf` to build these models.
 
-**https://fides.fe.uni-lj.si/openvaf/download**
+This section builds the community-maintained OpenVAF-Reloaded compiler from source
 
-A few things that aren't obvious from the repo README:
-
-- Binaries are named `openvaf-reloaded-<version>-linux_x64.tar.gz`, each is a **tarball**, not a standalone binary you can `chmod +x` directly. Extract it first.
-- There are two lineages: files with `osdi_0.3` in the name are the older API; files with `osdi_0.4` (including the newest, unlabeled ones like `openvaf-reloaded-20260616...`) are the current one. ngspice 44+ supports both; ngspice 43 only supports 0.3. Check your version with `ngspice -v`.
-- **Glibc mismatch is likely on older Ubuntu/Debian systems.** The newest builds on that page are compiled against a newer glibc (2.38/2.39-era, roughly Ubuntu 24.04+). On Ubuntu 22.04 (glibc 2.35) the newest builds fail with errors like:
-  ```
-  openvaf-r: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.39' not found
-  ```
-  If you hit this, don't try to fix your system glibc, just grab an **older build from the same page**. The plain `openvaf-reloaded-osdi_0.4-linux_x64.tar.gz` (dated 2024-07-07) was built against an older baseline and ran fine on Ubuntu 22.04 in testing.
-
-### Steps that worked
+### Install LLVM 18
 
 ```bash
-mkdir -p ~/eda-src/openvaf-r && cd ~/eda-src/openvaf-r
-wget https://fides.fe.uni-lj.si/openvaf/download/openvaf-reloaded-osdi_0.4-linux_x64.tar.gz
-tar -xzf openvaf-reloaded-osdi_0.4-linux_x64.tar.gz
-ls   # confirm the extracted binary's name, e.g. openvaf-r
+wget https://apt.llvm.org/llvm.sh
+chmod +x llvm.sh
+sudo ./llvm.sh 18
+sudo apt install -y llvm-18 llvm-18-dev libclang-18-dev clang-18
+```
 
-chmod +x openvaf-r
+Set LLVM 18 as the LLVM installation used by OpenVAF:
+
+```bash
+echo 'export LLVM_SYS_181_PREFIX=/usr/lib/llvm-18' >> ~/.bashrc
+echo 'export PATH=/usr/lib/llvm-18/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+```
+
+Verify the installation:
+
+```bash
+llvm-config-18 --version
+clang-18 --version
+```
+
+Both should report LLVM 18.x.
+
+### Install Rust
+
+OpenVAF-Reloaded is written in Rust. Install Rust using `rustup`:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+When prompted, choose **Customize installation** and select the **complete** profile.
+
+Then reload the Rust environment:
+
+```bash
+source ~/.cargo/env
+```
+
+Verify:
+
+```bash
+rustc --version
+cargo --version
+```
+
+### Build OpenVAF-Reloaded
+
+Clone the OpenVAF-Reloaded source repository:
+
+```bash
+cd ~/eda-src
+git clone https://github.com/OpenVAF/OpenVAF-Reloaded.git
+cd OpenVAF-Reloaded
+```
+
+Build the compiler using LLVM 18:
+
+```bash
+cargo build --release --features llvm18 --bin openvaf-r
+```
+
+The resulting compiler is:
+
+```text
+target/release/openvaf-r
+```
+
+Install it into the user's local executable directory:
+
+```bash
 mkdir -p ~/.local/bin
-cp openvaf-r ~/.local/bin/
-ln -sf ~/.local/bin/openvaf-r ~/.local/bin/openvaf   # IHP's install.py looks for the name "openvaf"
+cp target/release/openvaf-r ~/.local/bin/
+ln -sf ~/.local/bin/openvaf-r ~/.local/bin/openvaf
+```
 
-openvaf-r --version
+Verify that OpenVAF is available:
+
+```bash
 openvaf --version
 ```
 
-If both print a version cleanly, you're set to go back and re-run `install.py` from the previous section.
+### Compile the IHP SG13G2 Verilog-A models
+
+Now run the IHP PDK's installation script:
+
+```bash
+cd "$PDK_ROOT/ihp-sg13g2/libs.tech/xschem"
+python3 install.py
+```
+
+The script uses `openvaf` to compile the PDK's Verilog-A models into OSDI libraries. In particular, it creates the PSP103 NQS model required by the IHP MOSFET devices.
+
+Verify that the model was created:
+
+```bash
+ls -lh "$PDK_ROOT/ihp-sg13g2/libs.tech/ngspice/osdi/psp103_nqs.osdi"
+```
+
+The IHP installation script also installs the PDK-specific ngspice configuration as `~/.spiceinit`. **Do not create a separate custom `~/.spiceinit`**, because doing so can prevent ngspice from loading the IHP OSDI models.
+
+You can verify the symlink with:
+
+```bash
+ls -l ~/.spiceinit
+```
+
+It should point to the IHP PDK's ngspice configuration under `$PDK_ROOT/ihp-sg13g2/libs.tech/ngspice/`
+
+At this point OpenVAF and the IHP PSP103 models are installed and ready for ngspice.
 
 ---
 
@@ -204,7 +262,9 @@ Rather than typing `PDK`/`PDK_ROOT` every time, `ihp_env_setup` and `sky130_env_
 Set a default pdk to use, and add a line to your `~/.bashrc` file to select that pdk during start-up. Typical default is the sky130 pdk, but you may choose the IHP pdk if preferred.
 
 ```bash
-echo 'source <FILEPATH>/opensource-IC-tools-setup/pdk-env/sky130_env_setup' >> ~/.bashrc
+cd ~/FILE/PATH/opensource-IC-tools-setup/pdk-env
+mv .sky130_env_setup .ihp_env_setup $HOME
+echo 'source ~/.sky130_env_setup' >> ~/.bashrc
 source ~/.bashrc
 ```
 
@@ -219,7 +279,7 @@ xschem --rcfile $PDK_ROOT/sky130A/libs.tech/xschem/xschemrc
 xschem --rcfile $PDK_ROOT/ihp-sg13g2/libs.tech/xschem/xschemrc
 ```
 
-A **shell function that follows your current `$PDK` variable** is convenient when switching between projects as it lets you keep typing the plain `xschem`/`magic` command, and it automatically points at whichever PDK environment you hav set (see below in  `Selecting a PDK environment`). Add to `~/.bashrc`:
+A **shell function that follows your current `$PDK` variable** is convenient when switching between projects as it lets you keep typing the plain `xschem`/`magic` command, and it automatically points at whichever PDK environment you have set (see below in  `Selecting a PDK environment`). Add to `~/.bashrc`:
 
 ```bash
 xschem() {
@@ -236,7 +296,7 @@ Reload with `source ~/.bashrc`, then just run `xschem` or `magic` plain (no rcfi
 
 ### ngspice
 
-Invoked automatically by xschem's "simulate" button once the `xschemrc` above is loaded (it sets the right `.spiceinit`/model search paths). For standalone use, `cd` into a directory containing a `.spiceinit` symlinked to the PDK's ngspice setup, or `source` the PDK's model files explicitly in your netlist.
+Invoked automatically by xschem's "simulate" button once the `xschemrc` above is loaded (it sets the right `.spiceinit`/model search paths). For standalone use, make sure the PDK-managed ~/.spiceinit is installed. The IHP configuration loads the required PSP103 OSDI models automatically. Do not .include or source the binary .osdi files as SPICE netlists.
 
 ### netgen (LVS)
 
@@ -249,4 +309,4 @@ netgen -batch lvs "layout.spice layout_top" "schematic.spice schematic_top" \
 
 Swap in `$PDK_ROOT/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl` for IHP designs.
 
-(The command above expects real `layout.spice`/`schematic.spice` files to exist see the test version in [Verifying the setup](#verifying-the-setup) if you just want to confirm netgen + the PDK setup file load correctly, without having real netlists yet.)
+(The command above expects real `layout.spice`/`schematic.spice` files to exist see the test version in [Verifying the setup]\(#verifying-the-setup) if you just want to confirm netgen + the PDK setup file load correctly, without having real netlists yet.)
