@@ -106,7 +106,8 @@ ciel --version
 By default `ciel` installs into `~/.ciel`. It's common to instead set a `PDK_ROOT` explicitly and put it in your shell profile (`~/.bashrc`):
 
 ```bash
-export PDK_ROOT=$HOME/eda/pdk
+echo 'export PDK_ROOT=$HOME/eda/pdk' >> ~/.bashrc
+source ~/.bashrc
 mkdir -p "$PDK_ROOT"
 ```
 
@@ -196,9 +197,22 @@ If both print a version cleanly, you're set to go back and re-run `install.py` f
 
 ## 3. Wiring the tools to each PDK
 
+### Selecting a PDK environment
+
+Rather than typing `PDK`/`PDK_ROOT` every time, `ihp_env_setup` and `sky130_env_setup` can be sourced, which makes switching between a sky130 project and an IHP project painless, since each one just hardcodes its own PDK:
+
+Set a default pdk to use, and add a line to your `~/.bashrc` file to select that pdk during start-up. Typical default is the sky130 pdk, but you may choose the IHP pdk if preferred.
+
+```bash
+echo 'source <FILEPATH>/opensource-IC-tools-setup/pdk-env/sky130_env_setup' >> ~/.bashrc
+source ~/.bashrc
+```
+
+If you would like to change to a different pdk just invoke `source ~/FILE/PATH/<pdk-env-file>`
+
 ### xschem
 
-Each PDK ships an `xschemrc` that sets up its symbol/model paths. Launch xschem pointed at the right one:
+Each PDK ships an `xschemrc` that sets up its symbol/model paths. Launch xschem pointed at the right one to make sure the installation was successful.
 
 ```bash
 xschem --rcfile $PDK_ROOT/sky130A/libs.tech/xschem/xschemrc
@@ -236,16 +250,3 @@ netgen -batch lvs "layout.spice layout_top" "schematic.spice schematic_top" \
 Swap in `$PDK_ROOT/ihp-sg13g2/libs.tech/netgen/ihp-sg13g2_setup.tcl` for IHP designs.
 
 (The command above expects real `layout.spice`/`schematic.spice` files to exist see the test version in [Verifying the setup](#verifying-the-setup) if you just want to confirm netgen + the PDK setup file load correctly, without having real netlists yet.)
-
-### Selecting a PDK environment
-
-Rather than typing `PDK`/`PDK_ROOT` every time, `ihp_env_setup` and `sky130_env_setup` can be sourced, which makes switching between a sky130 project and an IHP project painless, since each one just hardcodes its own PDK:
-
-Set a default pdk to use, and add a line to your `.bashrc` file to select that pdk during start-up.
-
-```bash
-echo 'source sky130_env_setup' >> .bashrc
-source ~/.bashrc
-```
-
-If you would like to change to a different pdk just invoke `source ~/FILE/PATH/<pdk-env-file>`
