@@ -21,6 +21,16 @@ Installation guide for open-source IC design tools including xschem, ngspice, ma
 * run_lvs_extract.sh
 * run_rcx.sh
 
+`test-schematics` (Use to try out xschem and running simulations)
+* ihp/
+    * inv.sch
+    * inv.sym
+    * tb_inv.sch
+* sky/
+    * inv.sch
+    * inv.sym
+    * tb_inv.sch
+
 ## New Installation
 
 FOR NEW INSTALL START HERE -> `docs/installation-guide.md`

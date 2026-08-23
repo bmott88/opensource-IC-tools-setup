@@ -1,0 +1,42 @@
+** sch_path: /home/bmott/opensource-IC-tools-setup/test-schematics/ihp/tb_inv.sch
+**.subckt tb_inv
+x1 VDD OUT IN 0 inv
+V1 VDD 0 1.8
+V2 IN 0 0
+**** begin user architecture code
+
+
+
+.lib cornerMOSlv.lib mos_tt
+.lib cornerMOShv.lib mos_tt
+.lib cornerHBT.lib hbt_typ
+.lib cornerRES.lib res_typ
+.lib cornerDIO.lib dio_tt
+
+
+
+
+
+.param temp=27
+.control
+dc V2 0 1.8 0.001
+plot v(out)
+.endc
+
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  inv.sym # of pins=4
+** sym_path: /home/bmott/opensource-IC-tools-setup/test-schematics/ihp/inv.sym
+** sch_path: /home/bmott/opensource-IC-tools-setup/test-schematics/ihp/inv.sch
+.subckt inv VDD Y A VSS
+*.iopin VDD
+*.ipin A
+*.opin Y
+*.iopin VSS
+XM1 Y A VSS VSS sg13_lv_nmos w=0.15u l=0.13u ng=1
+XM2 Y A VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1
+.ends
+
+.end
