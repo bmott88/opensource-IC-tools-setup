@@ -5,6 +5,8 @@ V {}
 S {}
 F {}
 E {}
+T {To run simulation: Press "Netlist" button, then "Simulate" button, 
+and wait for plot window to pop-up} -240 -190 0 0 0.4 0.4 {}
 C {inv.sym} 0 0 0 0 {name=x1}
 C {lab_pin.sym} 0 -40 1 0 {name=p1 sig_type=std_logic lab=VDD}
 C {lab_pin.sym} -50 0 0 0 {name=p2 sig_type=std_logic lab=IN}
