@@ -85,15 +85,9 @@ cd ..
 Both **sky130** and **IHP SG13G2** are distributed as prebuilt, version-pinned packages via `ciel` (the successor to `volare`), you do **not** need to compile `open_pdks` yourself for either one.
 
 ```bash
-python3 -m pip install --user --upgrade --no-cache-dir ciel
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-Then check it was installed correctly by checking the version
-
-```bash
-ciel --version
+sudo apt install pipx
+pipx ensurepath
+pipx install ciel
 ```
 
 By default `ciel` installs into `~/.ciel`. It's common to instead set a `PDK_ROOT` explicitly and put it in your shell profile (`~/.bashrc`):
@@ -102,6 +96,12 @@ By default `ciel` installs into `~/.ciel`. It's common to instead set a `PDK_ROO
 echo 'export PDK_ROOT=$HOME/eda/pdk' >> ~/.bashrc
 source ~/.bashrc
 mkdir -p "$PDK_ROOT"
+```
+
+Then check it was installed correctly by checking the version
+
+```bash
+ciel --version
 ```
 
 ### Install sky130
@@ -216,7 +216,7 @@ cp target/release/openvaf-r ~/.local/bin/
 ln -sf ~/.local/bin/openvaf-r ~/.local/bin/openvaf
 ```
 
-Verify that OpenVAF is available:
+Verify that OpenVAF is available, the expected output is `OpenVAF-reloaded unkown`.
 
 ```bash
 openvaf --version
@@ -263,7 +263,7 @@ Set a default pdk to use, and add a line to your `~/.bashrc` file to select that
 
 ```bash
 cd ~/FILE/PATH/opensource-IC-tools-setup/pdk-env
-mv .sky130_env_setup .ihp_env_setup $HOME
+cp .sky130_env_setup .ihp_env_setup $HOME
 echo 'source ~/.sky130_env_setup' >> ~/.bashrc
 source ~/.bashrc
 ```
@@ -271,13 +271,6 @@ source ~/.bashrc
 If you would like to change to a different pdk just invoke `source ~/FILE/PATH/<pdk-env-file>`
 
 ### xschem
-
-Each PDK ships an `xschemrc` that sets up its symbol/model paths. Launch xschem pointed at the right one to make sure the installation was successful.
-
-```bash
-xschem --rcfile $PDK_ROOT/sky130A/libs.tech/xschem/xschemrc
-xschem --rcfile $PDK_ROOT/ihp-sg13g2/libs.tech/xschem/xschemrc
-```
 
 A **shell function that follows your current `$PDK` variable** is convenient when switching between projects as it lets you keep typing the plain `xschem`/`magic` command, and it automatically points at whichever PDK environment you have set (see below in  `Selecting a PDK environment`). Add to `~/.bashrc`:
 
