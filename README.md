@@ -1,5 +1,5 @@
 # opensource-IC-tools-setup
-Installation guide for open-source IC design tools including xschem, ngspice, magic VLSI, and netgen. Additional setup files and automation scripts are also included.
+Installation guide for open-source IC design tools including xschem, ngspice, magic VLSI, and netgen. Additional setup files and automation scripts are also included. Note that AI was used to help in the creation of this repository.
 
 ## Repository Contents
 `docs` (Main guide and documentation)
